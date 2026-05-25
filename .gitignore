@@ -16,6 +16,7 @@ element-snapper-options-mvp*.png
 *.zip
 *.crx
 *.pem
+release/
 
 .vscode/
 .idea/
