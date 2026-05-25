@@ -1,6 +1,7 @@
 import {
   STORAGE_KEY,
   getSettings,
+  isExtensionContextValid,
   resolveLanguage,
   sanitizeSettings,
   type Settings,
@@ -13,9 +14,49 @@ declare global {
   }
 }
 
+/**
+ * Filter to suppress the "Extension context invalidated" noise that appears
+ * in the host page's console after the user reloads / disables the extension
+ * while a content script is still attached to an open tab. The orphaned
+ * script can't be unloaded by us, but we can stop it from polluting the
+ * page's error log with errors that are not actionable for the site owner.
+ */
+function isOrphanedExtensionError(value: unknown): boolean {
+  const msg =
+    value instanceof Error ? value.message
+    : typeof value === "string" ? value
+    : (value as { message?: string })?.message ?? "";
+  return /Extension context invalidated|chrome\.runtime is undefined/i.test(msg);
+}
+
+window.addEventListener(
+  "error",
+  (event) => {
+    if (isOrphanedExtensionError(event.error ?? event.message)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  },
+  true,
+);
+
+window.addEventListener(
+  "unhandledrejection",
+  (event) => {
+    if (isOrphanedExtensionError(event.reason)) {
+      event.preventDefault();
+    }
+  },
+  true,
+);
+
 if (!window.__elementSnapper) {
   window.__elementSnapper = true;
-  initPicker();
+  try {
+    initPicker();
+  } catch (err) {
+    if (!isOrphanedExtensionError(err)) throw err;
+  }
 }
 
 interface ThemeTokens {
@@ -98,13 +139,25 @@ function initPicker(): void {
 
   void getSettings().then((s) => {
     userSettings = s;
+  }).catch(() => {
+    // Orphaned context — keep the sanitized defaults.
   });
 
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== "sync") return;
-    const next = changes[STORAGE_KEY]?.newValue as Partial<Settings> | undefined;
-    if (next) userSettings = sanitizeSettings(next);
-  });
+  // chrome.storage.onChanged may be missing entirely if the extension was
+  // already invalidated when this script was injected — guard the registration.
+  try {
+    chrome.storage?.onChanged?.addListener((changes, areaName) => {
+      if (!isExtensionContextValid()) {
+        teardown();
+        return;
+      }
+      if (areaName !== "sync") return;
+      const next = changes[STORAGE_KEY]?.newValue as Partial<Settings> | undefined;
+      if (next) userSettings = sanitizeSettings(next);
+    });
+  } catch {
+    // ignore — listener will simply never fire
+  }
 
   function resolveTheme(): "light" | "dark" {
     if (userSettings.theme === "light" || userSettings.theme === "dark") {
@@ -486,11 +539,32 @@ function initPicker(): void {
     hideOverlay();
   }
 
-  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if ((msg as { action?: string })?.action === "togglePicker") {
-      if (active) deactivate();
-      else activate();
-      sendResponse({ ok: true });
+  try {
+    chrome.runtime?.onMessage?.addListener((msg, _sender, sendResponse) => {
+      if (!isExtensionContextValid()) {
+        teardown();
+        return;
+      }
+      if ((msg as { action?: string })?.action === "togglePicker") {
+        if (active) deactivate();
+        else activate();
+        sendResponse({ ok: true });
+      }
+    });
+  } catch {
+    // ignore
+  }
+
+  /**
+   * Best-effort cleanup for the orphan-script case: ensure the picker UI is
+   * torn down so a dead extension can't leave a crosshair cursor and an
+   * unresponsive overlay stuck on the page.
+   */
+  function teardown(): void {
+    try {
+      deactivate();
+    } catch {
+      // swallow — nothing we can do from an orphan script
     }
-  });
+  }
 }

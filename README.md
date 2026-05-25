@@ -1,6 +1,27 @@
-# Element Snapper
+<p align="center">
+  <img src="assets/readme-banner.png" alt="Element Snapper — click any element, copy as prompt-ready Markdown" width="100%">
+</p>
 
-A lightweight Chrome extension for selecting any element on a page and copying its HTML plus computed CSS into a prompt-friendly Markdown block.
+<h1 align="center">Element Snapper</h1>
+
+<p align="center">
+  A lightweight Chrome extension for selecting any element on a page and copying its HTML plus computed CSS into a prompt-friendly Markdown block.
+</p>
+
+<p align="center">
+  <img src="icons/icon128.png" alt="Element Snapper icon" width="96" height="96">
+</p>
+
+## Install
+
+Grab the latest build from the [Releases page](https://github.com/magiccodelab/element-snapper/releases/latest). Two assets are published every release:
+
+| File | When to pick it | How to install |
+| --- | --- | --- |
+| `element-snapper-<version>.zip` | **Recommended.** Pre-built extension bundle. | Unzip → open `chrome://extensions` → enable **Developer mode** → click **Load unpacked** → select the unzipped folder. |
+| `element-snapper-<version>.crx` | Drag-drop install for users who don't want a folder lying around. | Open `chrome://extensions`, enable **Developer mode**, then drag the `.crx` file onto the page. Chrome will warn the extension is not from the Web Store and may disable it on next launch — that is expected for a self-signed CRX. Click **Keep** to confirm. |
+
+Or build from source — see **Develop** below.
 
 ## Stack
 

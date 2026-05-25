@@ -43,9 +43,27 @@ function normalizeLanguage(language: string | undefined | null): ResolvedLanguag
   return "en";
 }
 
+/**
+ * True when the content script's bridge to the extension service worker is
+ * still alive. Returns false after the extension has been reloaded or
+ * disabled — in that state every chrome.* call throws "Extension context
+ * invalidated" and any pending listener firing is a no-op.
+ */
+export function isExtensionContextValid(): boolean {
+  try {
+    return typeof chrome !== "undefined" && Boolean(chrome.runtime?.id);
+  } catch {
+    return false;
+  }
+}
+
 function getBrowserLanguage(): string {
-  if (typeof chrome !== "undefined" && chrome.i18n?.getUILanguage) {
-    return chrome.i18n.getUILanguage();
+  try {
+    if (isExtensionContextValid() && chrome.i18n?.getUILanguage) {
+      return chrome.i18n.getUILanguage();
+    }
+  } catch {
+    // fall through
   }
   return globalThis.navigator?.language ?? "en";
 }
@@ -72,25 +90,33 @@ export function sanitizeSettings(input: Partial<Settings> = {}): Settings {
 }
 
 export async function getSettings(): Promise<Settings> {
-  try {
-    if (typeof chrome !== "undefined" && chrome.storage?.sync) {
+  if (isExtensionContextValid() && chrome.storage?.sync) {
+    try {
       const data = await chrome.storage.sync.get(STORAGE_KEY);
       return sanitizeSettings(data[STORAGE_KEY] as Partial<Settings> | undefined);
+    } catch {
+      // Fall through to the local mirror or defaults.
     }
+  }
+  try {
     if (typeof localStorage !== "undefined") {
       const raw = localStorage.getItem(STORAGE_KEY);
       return sanitizeSettings(raw ? (JSON.parse(raw) as Partial<Settings>) : {});
     }
   } catch {
-    return sanitizeSettings();
+    // Ignore — fall through to defaults.
   }
   return sanitizeSettings();
 }
 
 export async function saveSettings(next: Partial<Settings>): Promise<Settings> {
   const settings = sanitizeSettings(next);
-  if (typeof chrome !== "undefined" && chrome.storage?.sync) {
-    await chrome.storage.sync.set({ [STORAGE_KEY]: settings });
+  if (isExtensionContextValid() && chrome.storage?.sync) {
+    try {
+      await chrome.storage.sync.set({ [STORAGE_KEY]: settings });
+    } catch {
+      // Context vanished mid-write — local mirror below still keeps the user's intent.
+    }
   }
   // Always mirror to localStorage so the options page can read theme + language
   // synchronously at boot and avoid a flash of incorrect theme.
