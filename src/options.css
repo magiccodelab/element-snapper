@@ -1,0 +1,266 @@
+@import "tailwindcss";
+
+@source "../options.html";
+@source "../options.js";
+
+:root {
+  color-scheme: light;
+  --bg: 220 20% 97%;
+  --bg-card: 0 0% 100%;
+  --bg-subtle: 220 15% 93%;
+  --bg-inset: 220 18% 91%;
+  --border: 220 15% 89%;
+  --border-strong: 220 15% 82%;
+  --fg: 220 20% 10%;
+  --fg-2: 220 12% 38%;
+  --fg-3: 220 10% 58%;
+  --primary: 221 83% 53%;
+  --primary-fg: 0 0% 100%;
+  --gold: 38 80% 48%;
+  --gold-fg: 0 0% 100%;
+  --ok: 142 71% 32%;
+  --ok-muted: 142 60% 93%;
+  --ok-muted-fg: 142 71% 25%;
+  --warn: 38 90% 46%;
+  --warn-muted: 38 90% 93%;
+  --warn-muted-fg: 38 80% 30%;
+  --info: 205 85% 45%;
+  --info-muted: 205 80% 92%;
+  --info-muted-fg: 205 85% 30%;
+  --danger: 0 84% 60%;
+  --danger-muted: 0 70% 95%;
+  --danger-muted-fg: 0 84% 38%;
+  --danger-fg: 0 0% 100%;
+  --shadow-color: 220 20% 10%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.05);
+  --shadow-md: 0 4px 12px hsl(var(--shadow-color) / 0.08);
+  --shadow-lg: 0 10px 24px hsl(var(--shadow-color) / 0.12);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-2xl: 24px;
+  --r-full: 9999px;
+  --t-fast: 120ms;
+  --t-base: 200ms;
+  --t-slow: 320ms;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: 224 16% 9%;
+  --bg-card: 224 16% 13%;
+  --bg-subtle: 224 14% 18%;
+  --bg-inset: 224 14% 15%;
+  --border: 224 14% 22%;
+  --border-strong: 224 14% 28%;
+  --fg: 210 20% 92%;
+  --fg-2: 215 12% 62%;
+  --fg-3: 215 10% 44%;
+  --primary: 217 85% 62%;
+  --primary-fg: 0 0% 100%;
+  --gold: 38 72% 58%;
+  --gold-fg: 224 16% 9%;
+  --ok: 142 65% 48%;
+  --ok-muted: 142 28% 14%;
+  --ok-muted-fg: 142 65% 62%;
+  --warn: 38 85% 54%;
+  --warn-muted: 38 28% 14%;
+  --warn-muted-fg: 38 85% 68%;
+  --info: 205 85% 58%;
+  --info-muted: 205 28% 14%;
+  --info-muted-fg: 205 85% 70%;
+  --danger: 0 68% 52%;
+  --danger-muted: 0 28% 14%;
+  --danger-muted-fg: 0 68% 66%;
+  --danger-fg: 0 0% 100%;
+  --shadow-color: 0 0% 0%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.4);
+  --shadow-md: 0 4px 12px hsl(var(--shadow-color) / 0.5);
+  --shadow-lg: 0 10px 24px hsl(var(--shadow-color) / 0.6);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+pre,
+button,
+input,
+select {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+@layer components {
+  .option-tile {
+    display: flex;
+    min-height: 112px;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-2);
+    border-radius: var(--r-lg);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--bg));
+    padding: var(--space-4);
+    transition: border-color var(--t-base), background var(--t-base), box-shadow var(--t-base);
+  }
+
+  .option-tile:has(input:checked) {
+    border-color: hsl(var(--primary) / 0.5);
+    background: hsl(var(--info-muted));
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+  }
+
+  .option-title,
+  .switch-title {
+    display: block;
+    color: hsl(var(--fg));
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .option-desc,
+  .switch-desc {
+    display: block;
+    color: hsl(var(--fg-2));
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .switch-row {
+    display: flex;
+    min-height: 82px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    border-radius: var(--r-lg);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--bg));
+    padding: var(--space-4);
+    transition: border-color var(--t-base), background var(--t-base);
+  }
+
+  .switch-input {
+    position: relative;
+    width: 48px;
+    height: 28px;
+    flex: 0 0 auto;
+    appearance: none;
+    border-radius: var(--r-full);
+    border: 1px solid hsl(var(--border-strong));
+    background: hsl(var(--bg-inset));
+    transition: background var(--t-base), border-color var(--t-base);
+  }
+
+  .switch-input::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    content: "";
+    border-radius: var(--r-full);
+    background: hsl(var(--bg-card));
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--t-base);
+  }
+
+  .switch-input:checked {
+    border-color: hsl(var(--primary));
+    background: hsl(var(--primary));
+  }
+
+  .switch-input:checked::after {
+    transform: translateX(20px);
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: hsl(var(--fg));
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .select-field {
+    width: 100%;
+    border-radius: var(--r-lg);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--bg));
+    color: hsl(var(--fg));
+    padding: 10px 12px;
+    font-size: 15px;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+  }
+
+  .select-field:focus {
+    border-color: hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.14);
+    outline: none;
+  }
+
+  .segmented {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-1);
+    border-radius: var(--r-lg);
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--bg-inset));
+    padding: var(--space-1);
+  }
+
+  .segmented label {
+    cursor: pointer;
+  }
+
+  .segmented span {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-md);
+    color: hsl(var(--fg-2));
+    font-size: 14px;
+    font-weight: 600;
+    transition: background var(--t-base), color var(--t-base), box-shadow var(--t-base);
+  }
+
+  .segmented input:checked + span {
+    background: hsl(var(--bg-card));
+    color: hsl(var(--fg));
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

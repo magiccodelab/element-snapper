@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Element Snapper Settings</title>
+    <link rel="icon" href="icons/icon16.png">
+    <link rel="stylesheet" href="dist/options.css">
+    <script src="settings.js" defer></script>
+    <script src="options.js" defer></script>
+  </head>
+  <body class="min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--fg))] antialiased transition-colors duration-200">
+    <header class="sticky top-0 z-50 border-b border-[hsl(var(--border)/0.7)] bg-[hsl(var(--bg)/0.82)] backdrop-blur-xl">
+      <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-4">
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="eyebrow">Extension Settings</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-normal text-[hsl(var(--fg))] sm:text-3xl" data-i18n="title">Element Snapper</h1>
+        </div>
+        <div id="saveStatus" class="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] px-3 py-1.5 text-sm text-[hsl(var(--fg-2))] shadow-[var(--shadow-sm)] transition duration-200" aria-live="polite">
+          Saved
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto grid w-full max-w-5xl gap-5 px-5 py-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <section class="rounded-[var(--r-xl)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] p-5 shadow-[var(--shadow-md)] transition duration-320">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="captureLabel">Capture</p>
+            <h2 class="mt-1 text-xl font-semibold tracking-normal" data-i18n="captureTitle">Prompt Content</h2>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-5">
+          <fieldset>
+            <legend class="text-sm font-medium text-[hsl(var(--fg))]" data-i18n="scopeTitle">Element range</legend>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2" data-setting="captureScope">
+              <label class="option-tile">
+                <input class="peer sr-only" type="radio" name="captureScope" value="withParents">
+                <span class="option-title" data-i18n="scopeParents">Selected + parents</span>
+                <span class="option-desc" data-i18n="scopeParentsDesc">Keeps the current context-rich output.</span>
+              </label>
+              <label class="option-tile">
+                <input class="peer sr-only" type="radio" name="captureScope" value="selfOnly">
+                <span class="option-title" data-i18n="scopeSelf">Selected only</span>
+                <span class="option-desc" data-i18n="scopeSelfDesc">Copies just the clicked element.</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="space-y-3">
+            <label class="switch-row">
+              <span>
+                <span class="switch-title" data-i18n="computedTitle">Include computed styles</span>
+                <span class="switch-desc" data-i18n="computedDesc">Adds browser-resolved CSS as inline styles.</span>
+              </span>
+              <input class="switch-input" type="checkbox" name="includeComputedStyles">
+            </label>
+            <label class="switch-row">
+              <span>
+                <span class="switch-title" data-i18n="elementStyleTitle">Include original element style</span>
+                <span class="switch-desc" data-i18n="elementStyleDesc">Keeps the raw element.style attribute when present.</span>
+              </span>
+              <input class="switch-input" type="checkbox" name="includeElementStyle">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-[var(--r-xl)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] p-5 shadow-[var(--shadow-md)]">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="appearanceLabel">Appearance</p>
+        <h2 class="mt-1 text-xl font-semibold tracking-normal" data-i18n="appearanceTitle">Language & Theme</h2>
+
+        <div class="mt-5 space-y-5">
+          <div>
+            <label class="field-label" for="uiLanguage" data-i18n="uiLanguage">Interface language</label>
+            <select class="select-field" id="uiLanguage" name="uiLanguage">
+              <option value="auto" data-i18n="auto">Follow browser</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="zh-TW">繁體中文</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label" for="promptLanguage" data-i18n="promptLanguage">Prompt language</label>
+            <select class="select-field" id="promptLanguage" name="promptLanguage">
+              <option value="auto" data-i18n="auto">Follow browser</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="zh-TW">繁體中文</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          <fieldset>
+            <legend class="field-label" data-i18n="themeTitle">Theme</legend>
+            <div class="segmented" data-setting="theme">
+              <label>
+                <input class="peer sr-only" type="radio" name="theme" value="system">
+                <span data-i18n="themeSystem">System</span>
+              </label>
+              <label>
+                <input class="peer sr-only" type="radio" name="theme" value="light">
+                <span data-i18n="themeLight">Light</span>
+              </label>
+              <label>
+                <input class="peer sr-only" type="radio" name="theme" value="dark">
+                <span data-i18n="themeDark">Dark</span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="rounded-[var(--r-xl)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] p-5 shadow-[var(--shadow-md)] lg:col-span-2">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="previewLabel">Preview</p>
+            <h2 class="mt-1 text-xl font-semibold tracking-normal" data-i18n="previewTitle">Prompt Shape</h2>
+          </div>
+          <button id="resetButton" class="inline-flex h-10 items-center justify-center rounded-[var(--r-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--bg))] px-4 text-sm font-medium text-[hsl(var(--fg))] transition duration-200 hover:border-[hsl(var(--primary)/0.35)] hover:bg-[hsl(var(--bg-subtle))] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--primary))]" type="button" data-i18n="reset">
+            Reset defaults
+          </button>
+        </div>
+        <pre id="preview" class="mt-4 min-h-48 overflow-auto rounded-[var(--r-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-inset))] p-4 text-sm leading-7 text-[hsl(var(--fg-2))]"></pre>
+      </section>
+    </main>
+  </body>
+</html>

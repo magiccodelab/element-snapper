@@ -6,9 +6,65 @@
   let hoveredEl = null;
   const OVERLAY_ID = "__es-overlay";
   const TOAST_ID = "__es-toast";
+  const settingsApi = window.ElementSnapperSettings;
+  const i18nApi = window.ElementSnapperI18n;
+  let userSettings = settingsApi.sanitizeSettings();
 
   const DEFAULT_STYLES = new Map();
   let defaultStyleEl = null;
+
+  const FLOATING_THEME = {
+    light: {
+      primary: "221 83% 53%",
+      primaryFg: "0 0% 100%",
+      panel: "220 20% 10%",
+      panelFg: "0 0% 100%",
+      border: "220 15% 89%",
+      shadow: "220 20% 10%",
+    },
+    dark: {
+      primary: "217 85% 62%",
+      primaryFg: "0 0% 100%",
+      panel: "224 16% 13%",
+      panelFg: "210 20% 92%",
+      border: "224 14% 28%",
+      shadow: "0 0% 0%",
+    },
+  };
+
+  settingsApi.getSettings().then((settings) => {
+    userSettings = settings;
+  });
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "sync") return;
+    const nextSettings = changes[settingsApi.STORAGE_KEY]?.newValue;
+    if (nextSettings) {
+      userSettings = settingsApi.sanitizeSettings(nextSettings);
+    }
+  });
+
+  function resolveTheme() {
+    if (userSettings.theme === "light" || userSettings.theme === "dark") {
+      return userSettings.theme;
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function applyThemeTokens(el) {
+    const tokens = FLOATING_THEME[resolveTheme()];
+    for (const [key, value] of Object.entries(tokens)) {
+      el.style.setProperty(`--es-${key}`, value);
+    }
+  }
+
+  function messages() {
+    return i18nApi.getMessages(settingsApi.resolveLanguage(userSettings.uiLanguage));
+  }
+
+  function promptMessages() {
+    return i18nApi.getMessages(settingsApi.resolveLanguage(userSettings.promptLanguage));
+  }
 
   function getDefaultStyles(tagName) {
     if (DEFAULT_STYLES.has(tagName)) return DEFAULT_STYLES.get(tagName);
@@ -56,6 +112,8 @@
   ];
 
   function getNonDefaultStyles(el) {
+    if (!userSettings.includeComputedStyles) return {};
+
     const computed = window.getComputedStyle(el);
     const defaults = getDefaultStyles(el.tagName.toLowerCase());
     const styles = {};
@@ -87,6 +145,10 @@
     const attrs = [];
 
     for (const attr of el.attributes) {
+      if (attr.name === "style" && userSettings.includeElementStyle && !userSettings.includeComputedStyles) {
+        attrs.push(`${attr.name}="${attr.value}"`);
+      }
+
       if (attr.name === "class" || attr.name === "id" || attr.name === "data-testid" ||
           attr.name === "href" || attr.name === "src" || attr.name === "alt" ||
           attr.name === "type" || attr.name === "placeholder" || attr.name === "role" ||
@@ -137,7 +199,10 @@
         : "";
 
       const styles = getNonDefaultStyles(current);
-      const styleStr = styleToString(styles);
+      let styleStr = styleToString(styles);
+      if (!styleStr && userSettings.includeElementStyle) {
+        styleStr = current.getAttribute("style") || "";
+      }
       const rect = current.getBoundingClientRect();
 
       ancestors.push({
@@ -153,32 +218,33 @@
   function buildPrompt(el) {
     const rect = el.getBoundingClientRect();
     const html = serializeElement(el);
-    const ancestors = getAncestorChain(el);
+    const ancestors = userSettings.captureScope === "withParents" ? getAncestorChain(el) : [];
+    const labels = promptMessages();
 
     const lines = [
-      "I need help with this HTML element. Here is the element with its inline computed styles:",
+      userSettings.includeComputedStyles ? labels.promptIntroWithStyles : labels.promptIntroWithoutStyles,
       "",
     ];
 
     if (ancestors.length > 0) {
-      lines.push("**Parent chain** (outermost → innermost, layout styles only):");
+      lines.push(`**${labels.parentChain}** (${labels.parentChainHint}):`);
       lines.push("");
       for (const a of ancestors) {
         const stylePart = a.style ? ` style="${a.style}"` : "";
-        lines.push(`- \`<${a.selector}${stylePart}>\` — ${a.dimensions}`);
+        lines.push(`- \`<${a.selector}${stylePart}>\` - ${a.dimensions}`);
       }
       lines.push("");
     }
 
     lines.push(
-      "**Selected element:**",
+      `**${labels.selectedElement}:**`,
       "",
       "```html",
       html,
       "```",
       "",
-      `Element dimensions: ${Math.round(rect.width)}×${Math.round(rect.height)}px`,
-      `Viewport: ${window.innerWidth}×${window.innerHeight}px`,
+      `${labels.elementDimensions}: ${Math.round(rect.width)}x${Math.round(rect.height)}px`,
+      `${labels.viewport}: ${window.innerWidth}x${window.innerHeight}px`,
     );
     return lines.join("\n");
   }
@@ -190,25 +256,26 @@
       overlay.id = OVERLAY_ID;
       overlay.style.cssText = `
         position: fixed; pointer-events: none; z-index: 2147483647;
-        border: 2px solid #0d9488; background: rgba(13, 148, 136, 0.10);
+        border: 2px solid hsl(var(--es-primary)); background: hsl(var(--es-primary) / 0.10);
         border-radius: 6px; transition: all 0.05s ease-out; display: none;
-        box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.24), 0 14px 34px rgba(15, 23, 42, 0.16);
+        box-shadow: 0 0 0 1px hsl(var(--es-primary) / 0.24), 0 14px 34px hsl(var(--es-shadow) / 0.16);
       `;
 
       const label = document.createElement("div");
       label.style.cssText = `
         position: absolute; top: -36px; left: -2px;
         max-width: min(420px, calc(100vw - 24px));
-        background: rgba(15, 23, 42, 0.96); color: #f8fafc;
+        background: hsl(var(--es-panel) / 0.96); color: hsl(var(--es-panel-fg));
         font: 12px/1.35 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-weight: 600; letter-spacing: 0; padding: 7px 10px;
-        border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.20);
+        border: 1px solid hsl(var(--es-border)); border-radius: 8px;
+        box-shadow: 0 12px 28px hsl(var(--es-shadow) / 0.20);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       `;
       overlay.appendChild(label);
       document.documentElement.appendChild(overlay);
     }
+    applyThemeTokens(overlay);
     return overlay;
   }
 
@@ -244,16 +311,17 @@
       toast.style.cssText = `
         position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); right: 20px; z-index: 2147483647;
         max-width: min(360px, calc(100vw - 32px));
-        background: rgba(15, 23, 42, 0.96); color: #f8fafc;
+        background: hsl(var(--es-panel) / 0.96); color: hsl(var(--es-panel-fg));
         font: 13px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         letter-spacing: 0; padding: 12px 14px; border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
+        border: 1px solid hsl(var(--es-border));
+        box-shadow: 0 16px 40px hsl(var(--es-shadow) / 0.28);
         backdrop-filter: blur(12px); transition: opacity 0.18s ease, transform 0.18s ease;
         pointer-events: none;
       `;
       document.documentElement.appendChild(toast);
     }
+    applyThemeTokens(toast);
     toast.textContent = msg;
     toast.style.opacity = "1";
     toast.style.transform = "translateY(0)";
@@ -299,9 +367,9 @@
 
       const prompt = buildPrompt(hoveredEl);
       navigator.clipboard.writeText(prompt).then(() => {
-        showToast(`Copied ${prompt.length} chars to clipboard`);
+        showToast(messages().copied(prompt.length));
       }).catch(() => {
-        showToast("Copy failed. Check clipboard permissions.");
+        showToast(messages().copyFailed);
       });
 
       setTimeout(() => {
@@ -336,7 +404,7 @@
     document.addEventListener("mousemove", onMouseMove, true);
     document.addEventListener("keydown", onKeyDown, true);
     document.body.style.cursor = "crosshair";
-    showToast("Element Snapper active. Click an element, Esc cancels.");
+    showToast(messages().pickerActive);
   }
 
   function deactivate() {
