@@ -3,7 +3,7 @@
   "name": "Element Snapper",
   "version": "0.1.0",
   "description": "Click any element, copy its HTML + CSS for AI prompts",
-  "permissions": ["activeTab", "contextMenus"],
+  "permissions": ["activeTab", "contextMenus", "scripting"],
   "action": {
     "default_title": "Element Snapper - Pick an element"
   },

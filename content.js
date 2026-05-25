@@ -352,10 +352,11 @@
     hideOverlay();
   }
 
-  chrome.runtime.onMessage.addListener((msg) => {
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.action === "togglePicker") {
       if (active) deactivate();
       else activate();
+      sendResponse({ ok: true });
     }
   });
 })();

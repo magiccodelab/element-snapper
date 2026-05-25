@@ -1,19 +1,30 @@
 const PICKER_MENU_ID = "element-snapper-start-picker";
 
-function togglePicker(tab) {
+async function togglePicker(tab) {
   if (!tab?.id) return;
 
-  const message = chrome.tabs.sendMessage(tab.id, { action: "togglePicker" });
-  if (message?.catch) {
-    message.catch(() => {});
+  try {
+    await chrome.tabs.sendMessage(tab.id, { action: "togglePicker" });
+  } catch (error) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["content.js"],
+      });
+      await chrome.tabs.sendMessage(tab.id, { action: "togglePicker" });
+    } catch (injectionError) {
+      // Some browser pages disallow extension scripts.
+    }
   }
 }
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: PICKER_MENU_ID,
-    title: "Start Element Snapper",
-    contexts: ["page", "selection", "link", "image"],
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: PICKER_MENU_ID,
+      title: "Start Element Snapper",
+      contexts: ["page", "selection", "link", "image"],
+    });
   });
 });
 
