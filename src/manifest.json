@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Element Snapper",
+  "version": "0.1.0",
+  "description": "Click any element, copy its HTML + CSS for AI prompts",
+  "permissions": ["activeTab", "contextMenus", "storage"],
+  "action": {
+    "default_title": "Element Snapper - Pick an element"
+  },
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "open-options": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "Open Element Snapper settings"
+    },
+    "toggle-picker": {
+      "suggested_key": {
+        "default": "Alt+Shift+E",
+        "mac": "Alt+Shift+E"
+      },
+      "description": "Start / cancel the Element Snapper picker"
+    }
+  }
+}

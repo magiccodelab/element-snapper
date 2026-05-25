@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Element Snapper Settings</title>
+    <link rel="icon" href="/icons/icon16.png">
+    <style>
+      /* Pre-paint backstop: if the bootstrap script below cannot read storage,
+         this still gives <html> a system-appropriate background. The full
+         dark variables also fire via :root:not(.light) in options.css. */
+      :root { color-scheme: light dark; background: #f4f5f8; }
+      @media (prefers-color-scheme: dark) {
+        :root { background: #15171c; }
+      }
+      html.dark { background: #15171c; color-scheme: dark; }
+      html.light { background: #f4f5f8; color-scheme: light; }
+    </style>
+    <!-- Classic blocking script — runs synchronously before first paint and
+         lands the .dark / .light class on <html>. Must be external because
+         MV3's CSP forbids inline <script>. -->
+    <script src="/anti-flash.js"></script>
+    <script type="module" src="./options.ts"></script>
+  </head>
+  <body class="min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--fg))] antialiased transition-colors duration-200">
+    <a href="#main" class="skip-link" data-i18n="skipToContent">Skip to settings</a>
+
+    <header class="sticky top-0 z-50 border-b border-[hsl(var(--border)/0.7)] bg-[hsl(var(--bg)/0.82)] backdrop-blur-xl">
+      <div class="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <div class="min-w-0">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="eyebrow">Extension Settings</p>
+          <h1 class="mt-1 text-2xl font-semibold tracking-normal text-[hsl(var(--fg))] sm:text-3xl" data-i18n="title">Element Snapper</h1>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div id="saveStatus" class="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] px-3 py-1.5 text-sm text-[hsl(var(--fg-2))] shadow-[var(--shadow-sm)] transition duration-200" aria-live="polite" aria-atomic="true">
+            Saved
+          </div>
+
+          <label class="sr-only" for="uiLanguage" data-i18n="uiLanguage">Interface language</label>
+          <select class="header-control" id="uiLanguage" name="uiLanguage" data-i18n-title="uiLanguage" title="Interface language">
+            <option value="auto" data-i18n="auto">Follow browser</option>
+            <option value="zh-CN">简体中文</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="en">English</option>
+          </select>
+
+          <fieldset class="segmented segmented--sm" data-setting="theme" aria-label="Theme">
+            <legend class="sr-only" data-i18n="themeTitle">Theme</legend>
+            <label>
+              <input class="peer sr-only" type="radio" name="theme" value="system">
+              <span data-i18n="themeSystem" data-i18n-title="themeSystem" title="System">System</span>
+            </label>
+            <label>
+              <input class="peer sr-only" type="radio" name="theme" value="light">
+              <span data-i18n="themeLight" data-i18n-title="themeLight" title="Light">Light</span>
+            </label>
+            <label>
+              <input class="peer sr-only" type="radio" name="theme" value="dark">
+              <span data-i18n="themeDark" data-i18n-title="themeDark" title="Dark">Dark</span>
+            </label>
+          </fieldset>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="mx-auto grid w-full max-w-5xl gap-5 px-5 py-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <section class="rounded-[var(--r-xl)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] p-5 shadow-[var(--shadow-md)] transition duration-320" aria-labelledby="captureHeading">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="captureLabel">Capture</p>
+            <h2 id="captureHeading" class="mt-1 text-xl font-semibold tracking-normal" data-i18n="captureTitle">Prompt content</h2>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-5">
+          <fieldset>
+            <legend class="text-sm font-medium text-[hsl(var(--fg))]" data-i18n="scopeTitle">Element range</legend>
+            <div class="mt-3 grid gap-2 sm:grid-cols-3" data-setting="captureScope" role="radiogroup" aria-labelledby="captureHeading">
+              <label class="option-tile">
+                <input class="peer sr-only" type="radio" name="captureScope" value="selfOnly">
+                <span class="option-title" data-i18n="scopeSelf">Selected only</span>
+                <span class="option-desc" data-i18n="scopeSelfDesc">Just the clicked element</span>
+              </label>
+              <label class="option-tile">
+                <input class="peer sr-only" type="radio" name="captureScope" value="withImmediateParent">
+                <span class="option-title" data-i18n="scopeImmediate">+ direct parent</span>
+                <span class="option-desc" data-i18n="scopeImmediateDesc">One level of context</span>
+              </label>
+              <label class="option-tile">
+                <input class="peer sr-only" type="radio" name="captureScope" value="withParents">
+                <span class="option-title" data-i18n="scopeParents">+ parent chain</span>
+                <span class="option-desc" data-i18n="scopeParentsDesc">Three levels up</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="space-y-3">
+            <label class="switch-row">
+              <span>
+                <span class="switch-title" data-i18n="computedTitle">Include computed styles</span>
+                <span class="switch-desc" data-i18n="computedDesc">Adds browser-resolved CSS as inline styles</span>
+              </span>
+              <input class="switch-input" type="checkbox" name="includeComputedStyles">
+            </label>
+            <label class="switch-row">
+              <span>
+                <span class="switch-title" data-i18n="elementStyleTitle">Include original element style</span>
+                <span class="switch-desc" data-i18n="elementStyleDesc">Keeps the raw element.style attribute when present</span>
+              </span>
+              <input class="switch-input" type="checkbox" name="includeElementStyle">
+            </label>
+            <label class="switch-row">
+              <span>
+                <span class="switch-title" data-i18n="copyToastTitle">Show copy-success toast</span>
+                <span class="switch-desc" data-i18n="copyToastDesc">Floating confirmation after each copy — failures and the picker-active hint always show</span>
+              </span>
+              <input class="switch-input" type="checkbox" name="showCopyToast">
+            </label>
+          </div>
+
+          <div class="inline-field">
+            <div>
+              <label class="switch-title" for="promptLanguage" data-i18n="promptLanguageTitle">Prompt language</label>
+              <p class="switch-desc" data-i18n="promptLanguageDesc">Language used inside the copied prompt — defaults to English for stable LLM input</p>
+            </div>
+            <select class="inline-select" id="promptLanguage" name="promptLanguage">
+              <option value="en">English</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="zh-TW">繁體中文</option>
+              <option value="auto" data-i18n="auto">Follow browser</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-[var(--r-xl)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-card))] p-5 shadow-[var(--shadow-md)]" aria-labelledby="previewHeading">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--fg-3))]" data-i18n="previewLabel">Preview</p>
+            <h2 id="previewHeading" class="mt-1 text-xl font-semibold tracking-normal" data-i18n="previewTitle">Prompt shape</h2>
+          </div>
+          <button id="resetButton" class="reset-button" type="button" data-i18n="reset">
+            Reset defaults
+          </button>
+        </div>
+        <pre id="preview" class="mt-4 min-h-48 overflow-auto rounded-[var(--r-lg)] border border-[hsl(var(--border))] bg-[hsl(var(--bg-inset))] p-4 text-sm leading-7 text-[hsl(var(--fg-2))]" aria-live="polite"></pre>
+      </section>
+    </main>
+  </body>
+</html>

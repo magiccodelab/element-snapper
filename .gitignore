@@ -6,9 +6,9 @@ Thumbs.db
 !.env.example
 
 node_modules/
-dist/*
-!dist/options.css
+dist/
 build/
+.pnpm-store/
 coverage/
 .playwright-mcp/
 element-snapper-options-mvp*.png
